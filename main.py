@@ -78,11 +78,18 @@ def run_workflow(resume: str, job_posting: str, prompt: str) -> None:
         None
     """\
     
-    is_valid = check_and_extract(prompt)
-    score = score_resume(resume, job_posting)
-    gap_summary = summarize_gaps(score)
-    display_output(score, gap_summary)
-    cache_data(score, gap_summary)
+    request_values = check_and_extract(prompt)
+    if request_values.score_resume:
+        score = score_resume(resume, job_posting)
+        gap_summary = summarize_gaps(score)
+        display_output(score, gap_summary)
+        cache_data(score, gap_summary)
+        if request_values.predict_success:
+            success_probability = predict_success(score, job_posting)
+            display_success(success_probability)
+    if request_values.suggest_edits:
+        edits = suggest_edits(resume, job_posting)
+        display_edits(edits)
     logger.info("Script complete")
 
 def extract_txt_file(fpath: Path) -> str:
