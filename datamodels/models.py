@@ -22,3 +22,9 @@ class JDScore(BaseModel):
 class ResumeDigest(BaseModel):
     """Summarize the resume"""
     summary: str = Field(description="Summary of the input resume")
+
+class JobInfo(BaseModel):
+    description: str = Field(description="The job description")
+    resume: str = Field(description="The resume")
+    score: Optional[float] = Field(description="Assigned score by LLM", default=0)
+    explanation: Optional[str] = Field(description="Short explanation as to why the score was given", default="None") 

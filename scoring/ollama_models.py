@@ -122,3 +122,54 @@ def score_resume(resume_text: str, job_description: str) -> JDScore:
         result = JDScore(score=-1, explanation="Comparison failed")
     return result
 
+
+def summarize_gaps(explanation: str) -> str:
+    """
+    Analyzes an explanation to extract missing skills or experiences.
+
+    This function sends a list of explanations to an LLM, which returns
+    a concise bullet-point list of specific skills or experiences that are identified as missing
+    or could be improved upon for a higher suitability score. The output is intended to help
+    candidates understand what areas of their resume could be strengthened to better match job requirements.
+
+    Args:
+        explanations (List[str]): List of rationale strings, each describing aspects of a candidate's profile
+                                  in relation to a job description.
+
+    Returns:
+        str: A bullet-point list of missing skills or experiences, as identified by the LLM.
+    """
+    logger.info("Starting gap summarizer")
+    
+    explanation = f"Rationale: {explanation}"
+
+    system_prompt = (
+        "You are an expert at identifying and articulating missing skills and experiences."
+        "Your task is to analyze a rationale, describing aspects of a candidate's profile in relation to a job."
+        "From these rationales, **extract only the specific skills or experiences that are identified as missing or could be improved upon**"
+        "for a higher suitability score. Provide your response as a concise list of bullet points,"
+        "with each point clearly stating a missing skill or experience."
+        "Do not include any introductory or concluding remarks, just the bullet points."
+    )
+
+    user_prompt = (
+        f"Analyze the following rationale to identify missing skills or experiences:\n"
+        f"{'\n--\n'.join(explanation)}\n--\n\n"
+        "List the identified gaps:"
+    )
+    
+    try:
+        response = chat(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            options={"temperature": 0},
+        )
+        logger.info("Gap summarizaton complete")
+        result = response["message"]["content"]
+    except Exception as e:
+        logger.error(f"Failed to identify gaps resume: {e}")
+        result = f"Unable to analyze gaps: {e}"
+    return result
