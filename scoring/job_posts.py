@@ -1,0 +1,8 @@
+
+from config import AI_BACKEND
+if AI_BACKEND == "openai":
+    from .oa_models import score_resume, summarize_gaps
+elif AI_BACKEND == "ollama":
+    from .ollama_models import score_resume, summarize_gaps
+else:
+    raise ValueError(f"Unknown AI_BACKEND: {AI_BACKEND}. Must be 'ollama' or 'openai'.")
