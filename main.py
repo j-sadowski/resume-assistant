@@ -41,7 +41,7 @@ def cache_data(score: JobInfo, gap_summary: str) -> None:
         json.dump(jobs_d, f, indent=4)
 
 
-def display_output(scores: List[JobInfo], gap_summary: str, top_n=5) -> None:
+def display_output(score: JobInfo, gap_summary: str, top_n=5) -> None:
     """
     Displays the top job matches and areas for improvement
 
@@ -54,12 +54,9 @@ def display_output(scores: List[JobInfo], gap_summary: str, top_n=5) -> None:
         - Prints the top N job matches and their explanations to the console.
         - Prints the gap summary to the console.
     """
-    sorted_jobs = sorted(scores, key=lambda x: x.score, reverse=True)
-    for job in sorted_jobs[:top_n]:
-        print("")
-        print(job.company)
-        print(f"{job.job_title}, score: {job.score}")
-        print(job.explanation)
+    print("")
+    print(score.score)
+    print(score.explanation)
     print("")
     print("Areas of improvement")
     print(gap_summary)
