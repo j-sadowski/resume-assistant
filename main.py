@@ -34,14 +34,14 @@ def cache_data(score: JobInfo, gap_summary: str) -> None:
     logger.info(f"Saving data to {outfile}")
     jobs_d = {
         "query_date": dt_string,
-        "jobs": score.model.dump(),
+        "job": score.model_dump(),
         "areas_of_improvement": gap_summary
     }
     with open(outfile, "w") as f:
         json.dump(jobs_d, f, indent=4)
 
 
-def display_output(score: JobInfo, gap_summary: str, top_n=5) -> None:
+def display_output(score: JobInfo, gap_summary: str) -> None:
     """
     Displays the top job matches and areas for improvement
 
@@ -106,6 +106,7 @@ if __name__ == "__main__":
     if not resume:
         logger.info("Exiting")
         exit(1)
+    logger.info(f"Reading job posting from {args.job_posting}")
     job_posting = extract_txt_file(args.job_posting)
     if not job_posting:
         logging.info("Exiting")

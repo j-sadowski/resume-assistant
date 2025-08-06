@@ -16,6 +16,8 @@ class WorkflowReqs(BaseModel):
 
 class JDScore(BaseModel):
     """Score the JD against the resume"""
+    # description: str = Field(description="The job description")
+    # resume: str = Field(description="The resume")
     score: float = Field(description="Resume suitability score")
     explanation: str = Field(description="Explanation of suitability score")
 
