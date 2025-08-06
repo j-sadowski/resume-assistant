@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-CACHE_DIR = Path.cwd() / "data/cache"
+CACHE_DIR = Path.cwd() / "data"
 CACHE_DIR.mkdir(exist_ok=True)
 
 def cache_data(score: JobInfo, gap_summary: str) -> None:
@@ -81,7 +81,7 @@ def run_workflow(resume: str, job_posting: str, prompt: str) -> None:
         None
     """\
     
-    extracted_data = check_and_extract(prompt)
+    is_valid = check_and_extract(prompt)
     score = score_resume(resume, job_posting)
     gap_summary = summarize_gaps(score)
     display_output(score, gap_summary)

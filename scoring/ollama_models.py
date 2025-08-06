@@ -16,26 +16,6 @@ model = "gemma3:1b"
 def check_request(prompt: str) -> ComparisonExtract:
     return ComparisonExtract(is_valid=True, confidence=0.9, rationale="PassThrough Value")
 
-def extract_reqs(prompt: str) -> WorkflowReqs:
-    logger.info("Starting prompt extraction")
-    completion = chat(
-        model=model,
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a helpful assistant designed to extract job search information from the prompt.  Your task is to analyze the prompt and extract: a job title, a city, optionally a limit on results and optionally a hybrid status. You are FORBIDDEN from filling in the resume field.",
-            },
-            {"role": "user", "content": prompt},
-        ],
-        format=WorkflowReqs.model_json_schema(),
-        options={"temperature": 0},
-    )
-    result = WorkflowReqs.model_validate_json(completion.message.content)
-    logger.info("Extraction complete!")
-    print(result)
-    return result
-
-
 
 def resume_summarizer(resume: str) -> ResumeDigest:
     """

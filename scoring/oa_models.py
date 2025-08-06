@@ -1,10 +1,9 @@
 import logging
-from typing import List
 
 from openai import OpenAI
 
 from config import OPENAI_API_KEY
-from datamodels.models import ComparisonExtract, WorkflowReqs, JDScore
+from datamodels.models import ComparisonExtract, WorkflowReqs, JDScore, ResumeDigest
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,27 +20,6 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 def check_request(prompt: str) -> ComparisonExtract:
     return ComparisonExtract(is_valid=True, confidence=0.9, rationale="PassThrough Value")
-
-def extract_reqs(prompt: str) -> WorkflowReqs:
-    logger.info("Starting prompt extraction")
-    completion = client.beta.chat.completions.parse(
-        model=model,
-        messages=[
-            {
-                "role": "system",
-                "content": "Extract keywords to search, the city to search in, and optional hybrid / limit parameters",
-            },
-            {"role": "user", "content": prompt},
-        ],
-        response_format=WorkflowReqs,
-        temperature=0.0
-    )
-    result = completion.choices[0].message.parsed
-    logger.info("Extraction complete!")
-    print(result)
-    return result
-
-
 
 def resume_summarizer(resume: str) -> ResumeDigest:
     """

@@ -26,5 +26,4 @@ def check_and_extract(prompt: str) -> WorkflowReqs:
     if not is_comparison_request.is_valid or is_comparison_request.confidence < 0.7:
         logger.warning(f"Gate check failed, this is not a valid request. {is_comparison_request.model_dump()}. Exiting")
         exit(1)
-    search_data = extract_reqs(prompt)
-    return search_data
+    return is_comparison_request
