@@ -5,10 +5,10 @@ import logging
 from pathlib import Path
 from pprint import pprint
 
-from datamodels.models import JobInfo
-from scoring.prompt_extraction import check_and_extract, extract_tailoring
-from scoring.job_posts import score_resume, summarize_gaps, suggest_edits
-from scoring.success_prediction import calculate_interview_chance
+from app.datamodels.models import JobInfo
+from app.scoring.prompt_extraction import check_and_extract, extract_tailoring
+from app.scoring.job_posts import score_resume, summarize_gaps, suggest_edits
+from app.scoring.success_prediction import calculate_interview_chance
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 CACHE_DIR = Path.cwd() / "data"
 CACHE_DIR.mkdir(exist_ok=True)
+
 
 def cache_data(score: JobInfo, gap_summary: str) -> None:
     """
@@ -78,7 +79,7 @@ def run_workflow(resume: str, job_posting: str, prompt: str) -> None:
     Returns:
         None
     """\
-    
+
     request_values = check_and_extract(prompt)
     gap_summary = ""
     if request_values.score_resume:
@@ -90,12 +91,15 @@ def run_workflow(resume: str, job_posting: str, prompt: str) -> None:
         if not request_values.score_resume:
             score = score_resume(resume, job_posting)
         tailoring_level = extract_tailoring(resume, job_posting)
-        success_probability = calculate_interview_chance(score.score * 10, tailoring_level)
-        print(f"Given a score of {score.score} and your resume that is {tailoring_level} tailored. Your probability of success is: {success_probability}%")
+        success_probability = calculate_interview_chance(
+            score.score * 10, tailoring_level)
+        print(
+            f"Given a score of {score.score} and your resume that is {tailoring_level} tailored. Your probability of success is: {success_probability}%")
     if request_values.suggest_edits:
         edits = suggest_edits(resume, job_posting, gap_summary)
         pprint(edits.suggestions)
     logger.info("Script complete")
+
 
 def extract_txt_file(fpath: Path) -> str:
     content = ""
@@ -106,11 +110,16 @@ def extract_txt_file(fpath: Path) -> str:
         logger.error(f"Unable to extract content from {fpath}! {e}")
     return content
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="LLM based job searches given a prompt")
-    parser.add_argument("-r", "--resume_path", type=Path, help="Path to local resume, currently only .txt format", required=True)
-    parser.add_argument("-j", "--job_posting", type=Path, help="Path to local job posting, currently only .txt format", required=True)
-    parser.add_argument("-p", "--prompt", type=str, help="The LLM prompt", required=True)
+    parser = argparse.ArgumentParser(
+        description="LLM based job searches given a prompt")
+    parser.add_argument("-r", "--resume_path", type=Path,
+                        help="Path to local resume, currently only .txt format", required=True)
+    parser.add_argument("-j", "--job_posting", type=Path,
+                        help="Path to local job posting, currently only .txt format", required=True)
+    parser.add_argument("-p", "--prompt", type=str,
+                        help="The LLM prompt", required=True)
     args = parser.parse_args()
 
     logger.info(f"Reading resume from {args.resume_path}")

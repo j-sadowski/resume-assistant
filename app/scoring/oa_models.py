@@ -4,8 +4,8 @@ import yaml
 
 from openai import OpenAI
 
-from config import OPENAI_API_KEY
-from datamodels.models import ComparisonExtract, WorkflowReqs, JDScore, ResumeSuggestions
+from app.config import OPENAI_API_KEY
+from app.datamodels.models import ComparisonExtract, WorkflowReqs, JDScore, ResumeSuggestions
 
 logging.basicConfig(
     level=logging.INFO,
@@ -14,15 +14,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-model = "gpt-4.1-nano-2025-04-14" #$0.10 per mil Smallest, cheapest for prototyping
-#model = "gpt-4.1-mini-2025-04-14" #$0.40 per mil
+# $0.10 per mil Smallest, cheapest for prototyping
+model = "gpt-4.1-nano-2025-04-14"
+# model = "gpt-4.1-mini-2025-04-14" #$0.40 per mil
 # model = "gpt-4.1-2025-04-14" #$2.00 per million
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Load prompts from the YAML file
-with open("scoring/oa_prompts.yaml", "r") as f:
+with open("app/scoring/oa_prompts.yaml", "r") as f:
     prompts = yaml.safe_load(f)
+
 
 def get_prompt(prompt_name: str, message_type: str) -> str:
     """A helper function to get a specific prompt message."""
@@ -37,7 +39,7 @@ def formatted_chat_completion(system_prompt: str, user_prompt: str, response_for
                 "role": "system",
                 "content": system_prompt
             },
-            {"role": "user", "content":user_prompt}
+            {"role": "user", "content": user_prompt}
         ],
         response_format=response_format,
         temperature=temperature
@@ -46,7 +48,7 @@ def formatted_chat_completion(system_prompt: str, user_prompt: str, response_for
     return result
 
 
-def basic_chat_completion(system_prompt:str, user_prompt:str, temperature=1.0) -> str:
+def basic_chat_completion(system_prompt: str, user_prompt: str, temperature=1.0) -> str:
     completion = client.chat.completions.create(
         model=model,
         messages=[
@@ -76,6 +78,7 @@ def extract_reqs(prompt: str) -> WorkflowReqs:
     logger.info("Extraction complete!")
     return result
 
+
 def extract_tailoring(resume_text: str, job_description: str) -> str:
     logger.info("Starting tailoring extraction")
     system_prompt = get_prompt("extract_tailoring", "system_message")
@@ -88,6 +91,7 @@ def extract_tailoring(resume_text: str, job_description: str) -> str:
                                    temperature=0.0)
     logger.info("Extraction complete!")
     return result
+
 
 def score_resume(resume_text: str, job_description: str) -> JDScore:
     """
@@ -114,7 +118,7 @@ def score_resume(resume_text: str, job_description: str) -> JDScore:
 
     try:
         result = formatted_chat_completion(system_prompt=system_prompt, user_prompt=user_prompt,
-                                       response_format=JDScore, temperature=0.0)
+                                           response_format=JDScore, temperature=0.0)
         logger.info("Resume scoring successful!")
     except Exception as e:
         logger.error(f"Failed to score resume: {e}")
@@ -139,7 +143,7 @@ def summarize_gaps(explanation: str) -> str:
         str: A bullet-point list of missing skills or experiences, as identified by the LLM.
     """
     logger.info("Starting gap summarizer")
-    
+
     explanation = f"Rationale: {explanation}"
     system_prompt = get_prompt("summarize_gaps", "system_message")
     user_prompt = (
@@ -147,7 +151,7 @@ def summarize_gaps(explanation: str) -> str:
         f"{'\n--\n'.join(explanation)}\n--\n\n"
         "List the identified gaps:"
     )
-    
+
     try:
         result = basic_chat_completion(system_prompt=system_prompt, user_prompt=user_prompt,
                                        temperature=0.0)
@@ -170,9 +174,9 @@ def suggest_edits(resume_text: str, job_description: str, gaps: Optional[str]) -
 
     try:
         result = formatted_chat_completion(system_prompt=system_prompt, user_prompt=user_prompt,
-                                       response_format=ResumeSuggestions, temperature=0.0)
-        logger.info("Resume scoring successful!")
+                                           response_format=ResumeSuggestions, temperature=0.0)
+        logger.info("Resume edit suggestions request successful!")
     except Exception as e:
         logger.error(f"Failed to score resume: {e}")
-        result = JDScore(score=-1, explanation="Comparison failed")
+        result = ResumeSuggestions(suggestions="Comparison failed")
     return result
