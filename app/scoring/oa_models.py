@@ -171,8 +171,8 @@ def suggest_edits(resume_text: str, job_description: str, gaps: Optional[str]) -
     try:
         result = formatted_chat_completion(system_prompt=system_prompt, user_prompt=user_prompt,
                                        response_format=ResumeSuggestions, temperature=0.0)
-        logger.info("Resume scoring successful!")
+        logger.info("Resume edit suggestions request successful!")
     except Exception as e:
         logger.error(f"Failed to score resume: {e}")
-        result = JDScore(score=-1, explanation="Comparison failed")
+        result = ResumeSuggestions(suggestions="Comparison failed")
     return result
