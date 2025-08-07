@@ -4,8 +4,8 @@ import yaml
 
 from openai import OpenAI
 
-from config import OPENAI_API_KEY
-from datamodels.models import ComparisonExtract, WorkflowReqs, JDScore, ResumeSuggestions
+from app.config import OPENAI_API_KEY
+from app.datamodels.models import ComparisonExtract, WorkflowReqs, JDScore, ResumeSuggestions
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,7 +21,7 @@ model = "gpt-4.1-nano-2025-04-14" #$0.10 per mil Smallest, cheapest for prototyp
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Load prompts from the YAML file
-with open("scoring/oa_prompts.yaml", "r") as f:
+with open("app/scoring/oa_prompts.yaml", "r") as f:
     prompts = yaml.safe_load(f)
 
 def get_prompt(prompt_name: str, message_type: str) -> str:

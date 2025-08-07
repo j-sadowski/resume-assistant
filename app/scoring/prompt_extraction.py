@@ -1,14 +1,14 @@
 import logging
 
 
-from config import AI_BACKEND
+from app.config import AI_BACKEND
 if AI_BACKEND == "openai":
     from .oa_models import check_request, extract_reqs, extract_tailoring 
 elif AI_BACKEND == "ollama":
     from .ollama_models import check_request#, extract_reqs 
 else:
     raise ValueError(f"Unknown AI_BACKEND: {AI_BACKEND}. Must be 'ollama' or 'openai'.")
-from datamodels.models import WorkflowReqs
+from app.datamodels.models import WorkflowReqs
 
 
 logging.basicConfig(

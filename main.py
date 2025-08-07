@@ -5,10 +5,10 @@ import logging
 from pathlib import Path
 from pprint import pprint
 
-from datamodels.models import JobInfo
-from scoring.prompt_extraction import check_and_extract, extract_tailoring
-from scoring.job_posts import score_resume, summarize_gaps, suggest_edits
-from scoring.success_prediction import calculate_interview_chance
+from app.datamodels.models import JobInfo
+from app.scoring.prompt_extraction import check_and_extract, extract_tailoring
+from app.scoring.job_posts import score_resume, summarize_gaps, suggest_edits
+from app.scoring.success_prediction import calculate_interview_chance
 
 logging.basicConfig(
     level=logging.INFO,
