@@ -1,4 +1,4 @@
-# Prompts for resume evaluation and editing
+# OpenAI Prompts for resume evaluation and editing
 prompts:
   check_request:
     system_message: "Analyze if the text contains information for a resume assistant"
@@ -14,8 +14,6 @@ prompts:
       Exceptional, Very Well, Well, Moderate, Generic
       Consider all aspects: skills, experience, qualifications, and alignment with the role's responsibilities.
       DO NOT DEVIATE FROM THE LIST OF WORDS
-  resume_summarizer:
-    system_message: "Summarize the provided resume, extract the important key words and phrases."
   score_resume:
     system_message: |
       You are an expert resume evaluator. Your task is to score a resume's suitability
