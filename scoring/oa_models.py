@@ -1,5 +1,6 @@
 import logging
 from typing import Optional
+import yaml
 
 from openai import OpenAI
 
@@ -18,6 +19,15 @@ model = "gpt-4.1-nano-2025-04-14" #$0.10 per mil Smallest, cheapest for prototyp
 # model = "gpt-4.1-2025-04-14" #$2.00 per million
 
 client = OpenAI(api_key=OPENAI_API_KEY)
+
+# Load prompts from the YAML file
+with open("scoring/oa_prompts.yaml", "r") as f:
+    prompts = yaml.safe_load(f)
+
+def get_prompt(prompt_name: str, message_type: str) -> str:
+    """A helper function to get a specific prompt message."""
+    return prompts['prompts'][prompt_name][message_type]
+
 
 def formatted_chat_completion(system_prompt: str, user_prompt: str, response_format, temperature=1.0):
     completion = client.beta.chat.completions.parse(
@@ -51,7 +61,7 @@ def basic_chat_completion(system_prompt:str, user_prompt:str, temperature=1.0) -
 
 def check_request(prompt: str) -> ComparisonExtract:
     logger.info("Checking prompt validity")
-    system_prompt = "Analyze if the text contains information for a resume assistant"
+    system_prompt = get_prompt("check_request", "system_message")
     result = formatted_chat_completion(system_prompt=system_prompt, user_prompt=prompt,
                                        response_format=ComparisonExtract)
     logger.info("Check complete!")
@@ -60,7 +70,7 @@ def check_request(prompt: str) -> ComparisonExtract:
 
 def extract_reqs(prompt: str) -> WorkflowReqs:
     logger.info("Starting prompt extraction")
-    system_prompt = "Extract whether the prompt includes requests for resume scoring, success calculation, and/or edit suggestion. Synonyms for these requests may be provided (e.g., resume fit)"
+    system_prompt = get_prompt("extract_reqs", "system_message")
     result = formatted_chat_completion(system_prompt=system_prompt, user_prompt=prompt,
                                        response_format=WorkflowReqs, temperature=0.0)
     logger.info("Extraction complete!")
@@ -68,15 +78,7 @@ def extract_reqs(prompt: str) -> WorkflowReqs:
 
 def extract_tailoring(resume_text: str, job_description: str) -> str:
     logger.info("Starting tailoring extraction")
-    system_prompt = (
-        "You are an expert resume evaluator. Your task is to evaluate the degree of resume tailoring"
-        "for a given job description."
-        "Respond with only one of these words: "
-        "Exceptional, Very Well, Well, Moderate, Generic"
-        "Consider all aspects: skills, experience, qualifications, and alignment with the role's responsibilities. "
-        "DO NOT DEVIATE FROM THE LIST OF WORDS"
-    )
-
+    system_prompt = get_prompt("extract_tailoring", "system_message")
     user_prompt = (
         f"Resume:\n---\n{resume_text}\n---\n\n"
         f"Job Description:\n---\n{job_description}\n---\n\n"
@@ -103,15 +105,7 @@ def score_resume(resume_text: str, job_description: str) -> JDScore:
     Returns:
         JDScore: An object containing the suitability score and an explanation.
     """
-
-    system_prompt = (
-        "You are an expert resume evaluator. Your task is to score a resume's suitability "
-        "for a given job description on a scale of 0 to 10. "
-        "A score of 10 indicates a perfect fit, and 0 indicates no fit. "
-        "Consider all aspects: skills, experience, qualifications, and alignment with the role's responsibilities. "
-        "Provide the numerical score as an float and a short explanation."
-    )
-
+    system_prompt = get_prompt("score_resume", "system_message")
     user_prompt = (
         f"Resume:\n---\n{resume_text}\n---\n\n"
         f"Job Description:\n---\n{job_description}\n---\n\n"
@@ -147,16 +141,7 @@ def summarize_gaps(explanation: str) -> str:
     logger.info("Starting gap summarizer")
     
     explanation = f"Rationale: {explanation}"
-
-    system_prompt = (
-        "You are an expert at identifying and articulating missing skills and experiences."
-        "Your task is to analyze a rationale, describing aspects of a candidate's profile in relation to a job."
-        "From these rationales, **extract only the specific skills or experiences that are identified as missing or could be improved upon**"
-        "for a higher suitability score. Provide your response as a concise list of bullet points,"
-        "with each point clearly stating a missing skill or experience."
-        "Do not include any introductory or concluding remarks, just the bullet points."
-    )
-
+    system_prompt = get_prompt("summarize_gaps", "system_message")
     user_prompt = (
         f"Analyze the following rationale to identify missing skills or experiences:\n"
         f"{'\n--\n'.join(explanation)}\n--\n\n"
@@ -174,15 +159,7 @@ def summarize_gaps(explanation: str) -> str:
 
 
 def suggest_edits(resume_text: str, job_description: str, gaps: Optional[str]) -> ResumeSuggestions:
-    
-    system_prompt = (
-        "You are an expert resume editor. Your task is improve a resume's suitability for a provided "
-        "job description. "
-        "Consider all aspects: skills, experience, qualifications, and alignment with the role's responsibilities. "
-        "Be critical and provide helpful suggestions on how to improve the resume. "
-        "End by stating how strong the fit is to a job description."
-    )
-
+    system_prompt = get_prompt("suggest_edits", "system_message")
     user_prompt = (
         "Provide edit suggestions for my resume:"
         f"Resume:\n---\n{resume_text}\n---\n\n"
