@@ -3,7 +3,7 @@ import logging
 
 from config import AI_BACKEND
 if AI_BACKEND == "openai":
-    from .oa_models import check_request, extract_reqs 
+    from .oa_models import check_request, extract_reqs, extract_tailoring 
 elif AI_BACKEND == "ollama":
     from .ollama_models import check_request#, extract_reqs 
 else:

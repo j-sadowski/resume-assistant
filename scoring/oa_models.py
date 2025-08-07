@@ -41,6 +41,33 @@ def extract_reqs(prompt: str) -> WorkflowReqs:
     logger.info("Extraction complete!")
     return result
 
+def extract_tailoring(resume_text: str, job_description: str) -> str:
+    logger.info("Starting tailoring extraction")
+    system_prompt = (
+        "You are an expert resume evaluator. Your task is to evaluate the degree of resume tailoring"
+        "for a given job description."
+        "Respond with only one of these words: "
+        "Exceptional, Very Well, Well, Moderate, Generic"
+        "Consider all aspects: skills, experience, qualifications, and alignment with the role's responsibilities. "
+        "DO NOT DEVIATE FROM THE LIST OF WORDS"
+    )
+
+    user_prompt = (
+        f"Resume:\n---\n{resume_text}\n---\n\n"
+        f"Job Description:\n---\n{job_description}\n---\n\n"
+        "Score this resume against the job description (0-10):"
+    )
+    completion = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        temperature=0.0
+    )
+    result = completion.choices[0].message.content
+    logger.info("Extraction complete!")
+    return result
 
 def resume_summarizer(resume: str) -> ResumeDigest:
     """
