@@ -20,7 +20,22 @@ model = "gpt-4.1-nano-2025-04-14" #$0.10 per mil Smallest, cheapest for prototyp
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 def check_request(prompt: str) -> ComparisonExtract:
-    return ComparisonExtract(is_valid=True, confidence=0.9, rationale="PassThrough Value")
+    logger.info("Checking prompt validity")
+    completion = client.beta.chat.completions.parse(
+            model=model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Analyze if the text contains information for a resume assistant",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            response_format=ComparisonExtract,
+            temperature=1.0
+        )
+    result = completion.choices[0].message.parsed
+    logger.info("Check complete!")
+    return result
 
 
 def extract_reqs(prompt: str) -> WorkflowReqs:

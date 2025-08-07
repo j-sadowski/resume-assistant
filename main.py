@@ -90,7 +90,7 @@ def run_workflow(resume: str, job_posting: str, prompt: str) -> None:
         if not request_values.score_resume:
             score = score_resume(resume, job_posting)
         tailoring_level = extract_tailoring(resume, job_posting)
-        success_probability = calculate_interview_chance(score.score*10, tailoring_level)
+        success_probability = calculate_interview_chance(score.score * 10, tailoring_level)
         print(f"Given a score of {score.score} and your resume that is {tailoring_level} tailored. Your probability of success is: {success_probability}%")
     if request_values.suggest_edits:
         edits = suggest_edits(resume, job_posting, gap_summary)
