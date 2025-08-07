@@ -5,4 +5,5 @@ if AI_BACKEND == "openai":
 elif AI_BACKEND == "ollama":
     from .ollama_models import score_resume, summarize_gaps
 else:
-    raise ValueError(f"Unknown AI_BACKEND: {AI_BACKEND}. Must be 'ollama' or 'openai'.")
+    raise ValueError(
+        f"Unknown AI_BACKEND: {AI_BACKEND}. Must be 'ollama' or 'openai'.")

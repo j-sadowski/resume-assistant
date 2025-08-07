@@ -27,10 +27,12 @@ def calculate_overall_fit_and_tailoring_score(raw_fit_percentage: float, tailori
         "Generic": -5
     }
 
-    initial_score = raw_fit_percentage + tailoring_boost_points.get(tailoring_level, 0)
+    initial_score = raw_fit_percentage + \
+        tailoring_boost_points.get(tailoring_level, 0)
     overall_score = max(0, min(initial_score, 100))
 
     return overall_score
+
 
 def calculate_time_decay(days_since_posted: int) -> float:
     """
@@ -56,6 +58,7 @@ def calculate_time_decay(days_since_posted: int) -> float:
     else:
         return 0.1
 
+
 def calculate_interview_chance(raw_fit_percentage: float, tailoring_level: str, days_since_posted=0) -> float:
     """
     Calculates the final estimated chance of getting an interview as a percentage.
@@ -70,14 +73,9 @@ def calculate_interview_chance(raw_fit_percentage: float, tailoring_level: str, 
     Returns:
         float: The estimated probability of an interview as a percentage (0-100%).
     """
-    # Calculate the composite score first
-    overall_score = calculate_overall_fit_and_tailoring_score(raw_fit_percentage, tailoring_level)
-
-    # Calculate the time decay factor
+    overall_score = calculate_overall_fit_and_tailoring_score(
+        raw_fit_percentage, tailoring_level)
     time_decay = calculate_time_decay(days_since_posted)
-
-    # Combine the scores to get the final probability
-    # The result is in percentage format
     interview_chance = (overall_score / 100.0) * time_decay * 100.0
 
     return round(interview_chance, 2)
