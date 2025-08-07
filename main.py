@@ -3,11 +3,11 @@ from datetime import datetime, timezone
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List
+from pprint import pprint
 
 from datamodels.models import JobInfo
 from scoring.prompt_extraction import check_and_extract
-from scoring.job_posts import score_resume, summarize_gaps
+from scoring.job_posts import score_resume, summarize_gaps, suggest_edits
 
 logging.basicConfig(
     level=logging.INFO,
@@ -79,17 +79,20 @@ def run_workflow(resume: str, job_posting: str, prompt: str) -> None:
     """\
     
     request_values = check_and_extract(prompt)
+    gap_summary = ""
     if request_values.score_resume:
         score = score_resume(resume, job_posting)
         gap_summary = summarize_gaps(score)
         display_output(score, gap_summary)
         cache_data(score, gap_summary)
-        if request_values.predict_success:
-            success_probability = predict_success(score, job_posting)
-            display_success(success_probability)
+    if request_values.predict_success:
+        if not request_values.score_resume:
+            score = score_resume(resume, job_posting)
+        success_probability = predict_success(score, job_posting)
+        display_success(success_probability)
     if request_values.suggest_edits:
-        edits = suggest_edits(resume, job_posting)
-        display_edits(edits)
+        edits = suggest_edits(resume, job_posting, gap_summary)
+        pprint(edits.suggestions)
     logger.info("Script complete")
 
 def extract_txt_file(fpath: Path) -> str:
