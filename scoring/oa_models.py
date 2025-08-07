@@ -4,7 +4,7 @@ from typing import Optional
 from openai import OpenAI
 
 from config import OPENAI_API_KEY
-from datamodels.models import ComparisonExtract, WorkflowReqs, JDScore, ResumeDigest, ResumeSuggestions
+from datamodels.models import ComparisonExtract, WorkflowReqs, JDScore, ResumeSuggestions
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,40 +19,50 @@ model = "gpt-4.1-nano-2025-04-14" #$0.10 per mil Smallest, cheapest for prototyp
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+def formatted_chat_completion(system_prompt: str, user_prompt: str, response_format, temperature=1.0):
+    completion = client.beta.chat.completions.parse(
+        model=model,
+        messages=[
+            {
+                "role": "system",
+                "content": system_prompt
+            },
+            {"role": "user", "content":user_prompt}
+        ],
+        response_format=response_format,
+        temperature=temperature
+    )
+    result = completion.choices[0].message.parsed
+    return result
+
+
+def basic_chat_completion(system_prompt:str, user_prompt:str, temperature=1.0) -> str:
+    completion = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        temperature=temperature
+    )
+    result = completion.choices[0].message.content
+    return result
+
+
 def check_request(prompt: str) -> ComparisonExtract:
     logger.info("Checking prompt validity")
-    completion = client.beta.chat.completions.parse(
-            model=model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": "Analyze if the text contains information for a resume assistant",
-                },
-                {"role": "user", "content": prompt},
-            ],
-            response_format=ComparisonExtract,
-            temperature=1.0
-        )
-    result = completion.choices[0].message.parsed
+    system_prompt = "Analyze if the text contains information for a resume assistant"
+    result = formatted_chat_completion(system_prompt=system_prompt, user_prompt=prompt,
+                                       response_format=ComparisonExtract)
     logger.info("Check complete!")
     return result
 
 
 def extract_reqs(prompt: str) -> WorkflowReqs:
     logger.info("Starting prompt extraction")
-    completion = client.beta.chat.completions.parse(
-        model=model,
-        messages=[
-            {
-                "role": "system",
-                "content": "Extract whether the prompt includes requests for resume scoring, success calculation, and/or edit suggestion. Synonyms for these requests may be provided (e.g., resume fit)",
-            },
-            {"role": "user", "content": prompt},
-        ],
-        response_format=WorkflowReqs,
-        temperature=0.0
-    )
-    result = completion.choices[0].message.parsed
+    system_prompt = "Extract whether the prompt includes requests for resume scoring, success calculation, and/or edit suggestion. Synonyms for these requests may be provided (e.g., resume fit)"
+    result = formatted_chat_completion(system_prompt=system_prompt, user_prompt=prompt,
+                                       response_format=WorkflowReqs, temperature=0.0)
     logger.info("Extraction complete!")
     return result
 
@@ -72,54 +82,10 @@ def extract_tailoring(resume_text: str, job_description: str) -> str:
         f"Job Description:\n---\n{job_description}\n---\n\n"
         "Score this resume against the job description (0-10):"
     )
-    completion = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        temperature=0.0
-    )
-    result = completion.choices[0].message.content
+    result = basic_chat_completion(system_prompt=system_prompt, user_prompt=user_prompt,
+                                   temperature=0.0)
     logger.info("Extraction complete!")
     return result
-
-def resume_summarizer(resume: str) -> ResumeDigest:
-    """
-    Summarize a resume to extract key keep the important bits for the for loop analysis
-
-    This function sends the provided resume text to an LLM, which returns a concise summary
-    highlighting the most important keywords and phrases. The summary is intended to capture
-    the core qualifications, skills, and experience from the resume for downstream analysis.
-    
-    Leaving this in for reference, but it makes the results worse. Probably needs to be replaced with
-    a tokenization step or something.
-
-    Args:
-        resume (str): The plain text content of the candidate's resume.
-
-    Returns:
-        ResumeDigest: An object containing the summarized resume.
-    """
-    logger.info("Starting resume summarizer")
-    
-
-    completion = client.beta.chat.completions.parse(
-        model=model,
-        messages=[
-            {
-                "role": "system",
-                "content": "Summarize the provided resume, extract the important key words and phrases.",
-            },
-            {"role": "user", "content": resume},
-        ],
-        response_format=ResumeDigest,
-    )
-    result = completion.choices[0].message.parsed
-    logger.info("Summary complete!")
-    print(result.summary)
-    return result
-
 
 def score_resume(resume_text: str, job_description: str) -> JDScore:
     """
@@ -153,17 +119,9 @@ def score_resume(resume_text: str, job_description: str) -> JDScore:
     )
 
     try:
-        response = client.beta.chat.completions.parse(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.0,
-            response_format=JDScore
-        )
+        result = formatted_chat_completion(system_prompt=system_prompt, user_prompt=user_prompt,
+                                       response_format=JDScore, temperature=0.0)
         logger.info("Resume scoring successful!")
-        result = response.choices[0].message.parsed
     except Exception as e:
         logger.error(f"Failed to score resume: {e}")
         result = JDScore(score=-1, explanation="Comparison failed")
@@ -206,16 +164,9 @@ def summarize_gaps(explanation: str) -> str:
     )
     
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.0
-        )
+        result = basic_chat_completion(system_prompt=system_prompt, user_prompt=user_prompt,
+                                       temperature=0.0)
         logger.info("Gap summarizaton complete")
-        result = response.choices[0].message.content
     except Exception as e:
         logger.error(f"Failed to identify gaps resume: {e}")
         result = f"Unable to analyze gaps: {e}"
@@ -241,17 +192,9 @@ def suggest_edits(resume_text: str, job_description: str, gaps: Optional[str]) -
         user_prompt += f"A separate analysis indicated these gaps: \n---\n{gaps}\n---\n\n"
 
     try:
-        response = client.beta.chat.completions.parse(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.0,
-            response_format=ResumeSuggestions
-        )
+        result = formatted_chat_completion(system_prompt=system_prompt, user_prompt=user_prompt,
+                                       response_format=ResumeSuggestions, temperature=0.0)
         logger.info("Resume scoring successful!")
-        result = response.choices[0].message.parsed
     except Exception as e:
         logger.error(f"Failed to score resume: {e}")
         result = JDScore(score=-1, explanation="Comparison failed")
