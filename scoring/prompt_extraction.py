@@ -3,7 +3,7 @@ import logging
 
 from config import AI_BACKEND
 if AI_BACKEND == "openai":
-    from .oa_models import check_request#, extract_reqs 
+    from .oa_models import check_request, extract_reqs, extract_tailoring 
 elif AI_BACKEND == "ollama":
     from .ollama_models import check_request#, extract_reqs 
 else:
@@ -26,4 +26,6 @@ def check_and_extract(prompt: str) -> WorkflowReqs:
     if not is_comparison_request.is_valid or is_comparison_request.confidence < 0.7:
         logger.warning(f"Gate check failed, this is not a valid request. {is_comparison_request.model_dump()}. Exiting")
         exit(1)
-    return is_comparison_request
+    request_values = extract_reqs(prompt)
+    print(request_values)
+    return request_values

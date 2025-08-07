@@ -3,11 +3,12 @@ from datetime import datetime, timezone
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List
+from pprint import pprint
 
 from datamodels.models import JobInfo
-from scoring.prompt_extraction import check_and_extract
-from scoring.job_posts import score_resume, summarize_gaps
+from scoring.prompt_extraction import check_and_extract, extract_tailoring
+from scoring.job_posts import score_resume, summarize_gaps, suggest_edits
+from scoring.success_prediction import calculate_interview_chance
 
 logging.basicConfig(
     level=logging.INFO,
@@ -78,11 +79,22 @@ def run_workflow(resume: str, job_posting: str, prompt: str) -> None:
         None
     """\
     
-    is_valid = check_and_extract(prompt)
-    score = score_resume(resume, job_posting)
-    gap_summary = summarize_gaps(score)
-    display_output(score, gap_summary)
-    cache_data(score, gap_summary)
+    request_values = check_and_extract(prompt)
+    gap_summary = ""
+    if request_values.score_resume:
+        score = score_resume(resume, job_posting)
+        gap_summary = summarize_gaps(score)
+        display_output(score, gap_summary)
+        cache_data(score, gap_summary)
+    if request_values.predict_success:
+        if not request_values.score_resume:
+            score = score_resume(resume, job_posting)
+        tailoring_level = extract_tailoring(resume, job_posting)
+        success_probability = calculate_interview_chance(score.score * 10, tailoring_level)
+        print(f"Given a score of {score.score} and your resume that is {tailoring_level} tailored. Your probability of success is: {success_probability}%")
+    if request_values.suggest_edits:
+        edits = suggest_edits(resume, job_posting, gap_summary)
+        pprint(edits.suggestions)
     logger.info("Script complete")
 
 def extract_txt_file(fpath: Path) -> str:
