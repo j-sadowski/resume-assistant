@@ -15,9 +15,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # $0.10 per mil Smallest, cheapest for prototyping
-model = "gpt-4.1-nano-2025-04-14"
-# model = "gpt-4.1-mini-2025-04-14" #$0.40 per mil
+# model = "gpt-4.1-nano-2025-04-14"
+model = "gpt-4.1-mini-2025-04-14" #$0.40 per mil
 # model = "gpt-4.1-2025-04-14" #$2.00 per million
+logger.info(f"Starting OpenAI backend with model: {model}")
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -32,19 +33,19 @@ def get_prompt(prompt_name: str, message_type: str) -> str:
 
 
 def formatted_chat_completion(system_prompt: str, user_prompt: str, response_format, temperature=1.0):
-    completion = client.beta.chat.completions.parse(
+    completion = client.responses.parse(
         model=model,
-        messages=[
+        input=[
             {
                 "role": "system",
                 "content": system_prompt
             },
             {"role": "user", "content": user_prompt}
         ],
-        response_format=response_format,
+        text_format=response_format,
         temperature=temperature
     )
-    result = completion.choices[0].message.parsed
+    result = completion.output_parsed
     return result
 
 
@@ -85,7 +86,7 @@ def extract_tailoring(resume_text: str, job_description: str) -> str:
     user_prompt = (
         f"Resume:\n---\n{resume_text}\n---\n\n"
         f"Job Description:\n---\n{job_description}\n---\n\n"
-        "Score this resume against the job description (0-10):"
+        "How tailored is this resume to the job description?"
     )
     result = basic_chat_completion(system_prompt=system_prompt, user_prompt=user_prompt,
                                    temperature=0.0)
