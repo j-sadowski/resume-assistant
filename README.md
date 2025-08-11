@@ -6,7 +6,7 @@ If you are interested in using the Ollama backend, make sure you have Ollama ins
 
 ## Application Workflow
 
-![Diagram of how the application calls various components](./workflow.png)
+![Architecture diagram showing LLM calls and inputs.](./workflow.png)
 
 ## Features
 - **Resume Scoring:** Get a suitability score for your resume against a job description.
