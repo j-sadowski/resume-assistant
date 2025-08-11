@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Dict
 import yaml
 
-def load_yaml_prompts(path_to_prompt: Path) -> Dict[str, Dict[str, str]]:
+def load_yaml_prompts(path_to_prompt: Path) -> Dict[str, Dict[str, Dict[str, str]]]:
     with open(path_to_prompt, "r") as f:
         prompts = yaml.safe_load(f)
     return prompts
