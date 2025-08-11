@@ -6,9 +6,10 @@ from pathlib import Path
 from pprint import pprint
 
 from app.datamodels.models import JobInfo
-from app.scoring.prompt_extraction import check_and_extract, extract_tailoring
-from app.scoring.job_posts import score_resume, summarize_gaps, suggest_edits
-from app.scoring.success_prediction import calculate_interview_chance
+from app.agent.oa_agent import loop_suggestions_eval
+from app.workflow import score_resume, summarize_gaps, suggest_edits
+from app.workflow.prompt_extraction import check_and_extract, extract_tailoring
+from app.workflow.success_prediction import calculate_interview_chance
 
 logging.basicConfig(
     level=logging.INFO,
@@ -96,7 +97,7 @@ def run_workflow(resume: str, job_posting: str, prompt: str) -> None:
         print(
             f"Given a score of {score.score} and your resume that is {tailoring_level} tailored. Your probability of success is: {success_probability}%")
     if request_values.suggest_edits:
-        edits = suggest_edits(resume, job_posting, gap_summary)
+        edits = loop_suggestions_eval(resume, job_posting, gap_summary)
         pprint(edits.suggestions)
     logger.info("Script complete")
 

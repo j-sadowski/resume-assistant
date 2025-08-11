@@ -40,6 +40,9 @@ class ResumeSuggestions(BaseModel):
     suggestions: str = Field(
         description="Suggestions on how to update the resume")
 
+class EvaluateSuggestions(BaseModel):
+    evaluation: bool = Field(description="Whether this response passes evaluation")
+    feedback: str = Field(description="Feedback to give to the generative model to improve the output")
 
 class ResumeDigest(BaseModel):
     """Summarize the resume"""

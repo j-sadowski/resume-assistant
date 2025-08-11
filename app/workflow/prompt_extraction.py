@@ -1,11 +1,11 @@
 import logging
 
-
+# FIXME: I'm not super happy about having the backend switch here instead of init, needs further thought
 from app.config import AI_BACKEND
 if AI_BACKEND == "openai":
-    from .oa_models import check_request, extract_reqs, extract_tailoring
+    from .oa_workflow import check_request, extract_reqs, extract_tailoring
 elif AI_BACKEND == "ollama":
-    from .ollama_models import check_request  # , extract_reqs
+    from .ollama_workflow import check_request  # , extract_reqs
 else:
     raise ValueError(
         f"Unknown AI_BACKEND: {AI_BACKEND}. Must be 'ollama' or 'openai'.")
