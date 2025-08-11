@@ -6,6 +6,7 @@ from pathlib import Path
 from pprint import pprint
 
 from app.datamodels.models import JobInfo
+# from app.agent.oa_agent import loop_suggestions_eval
 from app.workflow import score_resume, summarize_gaps, suggest_edits
 from app.workflow.prompt_extraction import check_and_extract, extract_tailoring
 from app.workflow.success_prediction import calculate_interview_chance
