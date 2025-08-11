@@ -13,7 +13,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-prompts = load_yaml_prompts(Path("app/scoring/oa_prompts.yaml"))
+prompts = load_yaml_prompts(Path("app/workflow/oa_prompts.yaml"))
 
 def check_request(prompt: str) -> Union[ComparisonExtract, None]:
     """
