@@ -59,23 +59,23 @@ def evaluate_edits(resume_text: str, job_description: str, suggestions: ResumeSu
         f"Resume:\n---\n{resume_text}\n---\n\n"
         f"Job Description:\n---\n{job_description}\n---\n\n"
         f"Resume Suggestions:\n---\n{suggestions.suggestions}\n---\n\n"
-        "Do the resume suggestions correspond to the provided job description and resume?"
     )
     try:
         result = formatted_chat_completion(system_prompt=system_prompt, user_prompt=user_prompt,
                                            response_format=EvaluateSuggestions)
         logger.info("Resume Suggestion eval request successful")
     except Exception as e:
-        logger.error("Failed to evaluate resume suggestions: {e}")
+        logger.error(f"Failed to evaluate resume suggestions: {e}")
         result = EvaluateSuggestions(
-            evaluation=False, feedback="Failed to evaluate resume suggestions: {e}")
+            evaluation=False, feedback=f"Failed to evaluate resume suggestions: {e}")
     return result
 
 
 def loop_suggestions_eval(resume_text: str,
                           job_description: str,
                           gaps: Optional[str],
-                          max_iter=10) -> ResumeSuggestions:
+                          max_iter=5) -> ResumeSuggestions:
+    logger.info("Starting Edit Suggestion/Refinement agentic loop")
     memory = []
     result = suggest_edits(resume_text=resume_text,
                            job_description=job_description,
@@ -86,7 +86,9 @@ def loop_suggestions_eval(resume_text: str,
         evaluation = evaluate_edits(resume_text=resume_text,
                                     job_description=job_description,
                                     suggestions=result)
+
         if evaluation.evaluation:
+            logger.info("Edit Suggestion/Refinment agentic loop complete")
             return result
         context = "\n".join([
             "Previous attempts:",
@@ -98,4 +100,5 @@ def loop_suggestions_eval(resume_text: str,
             resume_text=resume_text, job_description=job_description, gaps=gaps, context=context)
         memory.append(result)
         i += 1
+    logger.info(f"Edit Suggestion/Refinement loop exited after {max_iter} results")
     return result
