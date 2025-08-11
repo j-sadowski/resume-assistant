@@ -1,11 +1,10 @@
 import logging
+from pathlib import Path
 from typing import Optional, Union
-import yaml
 
-from openai import OpenAI
-
-from app.config import OPENAI_API_KEY
 from app.datamodels.models import ComparisonExtract, WorkflowReqs, JDScore, ResumeSuggestions
+from app.utils.oa_utils import formatted_chat_completion, basic_chat_completion
+from app.utils.utils import load_yaml_prompts, get_prompt
 
 logging.basicConfig(
     level=logging.INFO,
@@ -14,85 +13,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# $0.10 per mil Smallest, cheapest for prototyping
-# model = "gpt-4.1-nano-2025-04-14"
-model = "gpt-4.1-mini-2025-04-14"  # $0.40 per mil
-# model = "gpt-4.1-2025-04-14" #$2.00 per million
-logger.info(f"Starting OpenAI backend with model: {model}")
-
-client = OpenAI(api_key=OPENAI_API_KEY)
-
-# Load prompts from the YAML file
-with open("app/scoring/oa_prompts.yaml", "r") as f:
-    prompts = yaml.safe_load(f)
-
-
-def get_prompt(prompt_name: str, message_type: str) -> str:
-    """
-    Retrieve a specific prompt message from the loaded YAML prompts.
-
-    Args:
-        prompt_name (str): The name of the prompt to retrieve.
-        message_type (str): The type of message (e.g., 'system_message', 'user_message').
-
-    Returns:
-        str: The requested prompt message.
-    """
-    return prompts['prompts'][prompt_name][message_type]
-
-
-def formatted_chat_completion(system_prompt: str, user_prompt: str, response_format, temperature=1.0):
-    """
-    Send a formatted chat completion request to the LLM and parse the response.
-
-    Args:
-        system_prompt (str): The system prompt to provide context to the LLM.
-        user_prompt (str): The user's input prompt.
-        response_format: The expected response format or class for parsing.
-        temperature (float, optional): Sampling temperature for the LLM. Defaults to 1.0.
-
-    Returns:
-        Parsed response in the specified format.
-    """
-    completion = client.responses.parse(
-        model=model,
-        input=[
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-            {"role": "user", "content": user_prompt}
-        ],
-        text_format=response_format,
-        temperature=temperature
-    )
-    result = completion.output_parsed
-    return result
-
-
-def basic_chat_completion(system_prompt: str, user_prompt: str, temperature=1.0) -> Union[str, None]:
-    """
-    Send a basic chat completion request to the LLM and return the response as a string.
-
-    Args:
-        system_prompt (str): The system prompt to provide context to the LLM.
-        user_prompt (str): The user's input prompt.
-        temperature (float, optional): Sampling temperature for the LLM. Defaults to 1.0.
-
-    Returns:
-        str or None: The LLM's response as a string, or None if unavailable.
-    """
-    completion = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        temperature=temperature
-    )
-    result = completion.choices[0].message.content
-    return result
-
+prompts = load_yaml_prompts(Path("app/scoring/oa_prompts.yaml"))
 
 def check_request(prompt: str) -> Union[ComparisonExtract, None]:
     """
@@ -105,7 +26,7 @@ def check_request(prompt: str) -> Union[ComparisonExtract, None]:
         ComparisonExtract or None: The validation result, or None on failure.
     """
     logger.info("Checking prompt validity")
-    system_prompt = get_prompt("check_request", "system_message")
+    system_prompt = get_prompt(prompts, "check_request", "system_message")
     try:
         result = formatted_chat_completion(system_prompt=system_prompt, user_prompt=prompt,
                                            response_format=ComparisonExtract)
@@ -128,7 +49,7 @@ def extract_reqs(prompt: str) -> Union[WorkflowReqs, None]:
         WorkflowReqs or None: The extracted requirements, or None on failure.
     """
     logger.info("Starting prompt extraction")
-    system_prompt = get_prompt("extract_reqs", "system_message")
+    system_prompt = get_prompt(prompts, "extract_reqs", "system_message")
     try:
         result = formatted_chat_completion(system_prompt=system_prompt, user_prompt=prompt,
                                            response_format=WorkflowReqs, temperature=0.0)
@@ -153,7 +74,7 @@ def extract_tailoring(resume_text: str, job_description: str) -> Union[str, None
         str or None: The LLM's assessment of tailoring, or None on failure.
     """
     logger.info("Starting tailoring level extraction")
-    system_prompt = get_prompt("extract_tailoring", "system_message")
+    system_prompt = get_prompt(prompts, "extract_tailoring", "system_message")
     user_prompt = (
         f"Resume:\n---\n{resume_text}\n---\n\n"
         f"Job Description:\n---\n{job_description}\n---\n\n"
@@ -180,7 +101,7 @@ def score_resume(resume_text: str, job_description: str) -> Union[JDScore, None]
     Returns:
         JDScore or None: An object containing the suitability score and an explanation, or None on failure.
     """
-    system_prompt = get_prompt("score_resume", "system_message")
+    system_prompt = get_prompt(prompts, "score_resume", "system_message")
     user_prompt = (
         f"Resume:\n---\n{resume_text}\n---\n\n"
         f"Job Description:\n---\n{job_description}\n---\n\n"
@@ -210,7 +131,7 @@ def summarize_gaps(explanation: str) -> Union[str, None]:
     logger.info("Starting gap summarizer")
 
     explanation = f"Rationale: {explanation}"
-    system_prompt = get_prompt("summarize_gaps", "system_message")
+    system_prompt = get_prompt(prompts, "summarize_gaps", "system_message")
     user_prompt = (
         f"Analyze the following rationale to identify missing skills or experiences:\n"
         f"{'\n--\n'.join(explanation)}\n--\n\n"
@@ -239,7 +160,7 @@ def suggest_edits(resume_text: str, job_description: str, gaps: Optional[str]) -
     Returns:
         ResumeSuggestions or None: Suggestions for resume improvements, or None on failure.
     """
-    system_prompt = get_prompt("suggest_edits", "system_message")
+    system_prompt = get_prompt(prompts, "suggest_edits", "system_message")
     user_prompt = (
         "Provide edit suggestions for my resume:"
         f"Resume:\n---\n{resume_text}\n---\n\n"
