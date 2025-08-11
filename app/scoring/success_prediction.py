@@ -1,3 +1,4 @@
+# FIXME: This is better off conceptualized as a measure of diminsihing returns, not a success prediction
 
 def calculate_overall_fit_and_tailoring_score(raw_fit_percentage: float, tailoring_level: str) -> float:
     """

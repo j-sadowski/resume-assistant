@@ -6,8 +6,8 @@ from pathlib import Path
 from pprint import pprint
 
 from app.datamodels.models import JobInfo
+from app.scoring import score_resume, summarize_gaps, suggest_edits
 from app.scoring.prompt_extraction import check_and_extract, extract_tailoring
-from app.scoring.job_posts import score_resume, summarize_gaps, suggest_edits
 from app.scoring.success_prediction import calculate_interview_chance
 
 logging.basicConfig(

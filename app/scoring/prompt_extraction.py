@@ -1,6 +1,6 @@
 import logging
 
-
+# FIXME: I'm not super happy about having the backend switch here instead of init, needs further thought
 from app.config import AI_BACKEND
 if AI_BACKEND == "openai":
     from .oa_models import check_request, extract_reqs, extract_tailoring
