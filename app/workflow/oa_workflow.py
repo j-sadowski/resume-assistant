@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 
 prompts = load_yaml_prompts(Path("app/workflow/oa_prompts.yaml"))
 
-def check_request(prompt: str) -> Union[ComparisonExtract, None]:
+
+def check_request(prompt: str) -> ComparisonExtract:
     """
     Validate a prompt using the LLM and return a ComparisonExtract object.
 
@@ -38,7 +39,7 @@ def check_request(prompt: str) -> Union[ComparisonExtract, None]:
     return result
 
 
-def extract_reqs(prompt: str) -> Union[WorkflowReqs, None]:
+def extract_reqs(prompt: str) -> WorkflowReqs:
     """
     Extract workflow requirements from a prompt using the LLM.
 
@@ -62,7 +63,7 @@ def extract_reqs(prompt: str) -> Union[WorkflowReqs, None]:
     return result
 
 
-def extract_tailoring(resume_text: str, job_description: str) -> Union[str, None]:
+def extract_tailoring(resume_text: str, job_description: str) -> str:
     """
     Assess how well a resume is tailored to a specific job description using the LLM.
 
@@ -82,15 +83,15 @@ def extract_tailoring(resume_text: str, job_description: str) -> Union[str, None
     )
     try:
         result = basic_chat_completion(system_prompt=system_prompt, user_prompt=user_prompt,
-                                    temperature=0.0)
+                                       temperature=0.0)
         logger.info("Extraction complete!")
     except Exception as e:
-            logger.error(f"Failed to extract tailoring level: {e}")
-            result = ""
+        logger.error(f"Failed to extract tailoring level: {e}")
+        result = ""
     return result
 
 
-def score_resume(resume_text: str, job_description: str) -> Union[JDScore, None]:
+def score_resume(resume_text: str, job_description: str) -> JDScore:
     """
     Evaluates the suitability of a resume for a specific job description using the LLM.
 
@@ -118,7 +119,7 @@ def score_resume(resume_text: str, job_description: str) -> Union[JDScore, None]
     return result
 
 
-def summarize_gaps(explanation: str) -> Union[str, None]:
+def summarize_gaps(explanation: str) -> str:
     """
     Analyze an explanation to extract missing skills or experiences using the LLM.
 
@@ -148,7 +149,7 @@ def summarize_gaps(explanation: str) -> Union[str, None]:
     return result
 
 
-def suggest_edits(resume_text: str, job_description: str, gaps: Optional[str]) -> Union[ResumeSuggestions, None]:
+def suggest_edits(resume_text: str, job_description: str, gaps: Optional[str]) -> ResumeSuggestions:
     """
     Suggest edits to improve a resume based on a job description and identified gaps using the LLM.
 

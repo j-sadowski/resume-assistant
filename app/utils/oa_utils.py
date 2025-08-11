@@ -50,10 +50,12 @@ def formatted_chat_completion(system_prompt: str, user_prompt: str, response_for
         temperature=temperature
     )
     result = completion.output_parsed
+    if not result:
+        raise ValueError("API call returned a None result.")
     return result
 
 
-def basic_chat_completion(system_prompt: str, user_prompt: str, temperature=1.0) -> Union[str, None]:
+def basic_chat_completion(system_prompt: str, user_prompt: str, temperature=1.0) -> str:
     """
     Send a basic chat completion request to the LLM and return the response as a string.
 
@@ -80,5 +82,7 @@ def basic_chat_completion(system_prompt: str, user_prompt: str, temperature=1.0)
         temperature=temperature
     )
     result = completion.choices[0].message.content
+    if not result:
+        raise ValueError("API call returned a None result.")
     return result
 

@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 from app.datamodels.models import ResumeSuggestions, EvaluateSuggestions
 from app.utils.oa_utils import formatted_chat_completion
@@ -17,7 +17,7 @@ workflow_prompts = load_yaml_prompts(Path("app/workflow/oa_prompts.yaml"))
 agent_prompts = load_yaml_prompts(Path("app/agent/oa_prompts.yaml"))
 
 
-def suggest_edits(resume_text: str, job_description: str, gaps: Optional[str], context="") -> Union[ResumeSuggestions, None]:
+def suggest_edits(resume_text: str, job_description: str, gaps: Optional[str], context="") -> ResumeSuggestions:
     """
     Suggest edits to improve a resume based on a job description and identified gaps using the LLM.
 
@@ -51,7 +51,7 @@ def suggest_edits(resume_text: str, job_description: str, gaps: Optional[str], c
     return result
 
 
-def evaluate_edits(resume_text: str, job_description: str, suggestions: ResumeSuggestions) -> Union[EvaluateSuggestions, None]:
+def evaluate_edits(resume_text: str, job_description: str, suggestions: ResumeSuggestions) -> EvaluateSuggestions:
 
     system_prompt = get_prompt(
         agent_prompts, "evaluate_edits", "system_message")
@@ -72,8 +72,10 @@ def evaluate_edits(resume_text: str, job_description: str, suggestions: ResumeSu
     return result
 
 
-def loop_suggestions_eval(resume_text: str, job_description: str,
-                          gaps: Optional[str], max_iter=10) -> Union[ResumeSuggestions, None]:
+def loop_suggestions_eval(resume_text: str,
+                          job_description: str,
+                          gaps: Optional[str],
+                          max_iter=10) -> ResumeSuggestions:
     memory = []
     result = suggest_edits(resume_text=resume_text,
                            job_description=job_description,
