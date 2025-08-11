@@ -38,10 +38,13 @@ def formatted_chat_completion(system_prompt: str, user_prompt: str, response_for
         model=model,
         input=[
             {
-                "role": "system",
+                "role": "developer",
                 "content": system_prompt
             },
-            {"role": "user", "content": user_prompt}
+            {   
+                "role": "user", 
+                "content": user_prompt
+            }
         ],
         text_format=response_format,
         temperature=temperature
@@ -65,8 +68,14 @@ def basic_chat_completion(system_prompt: str, user_prompt: str, temperature=1.0)
     completion = client.chat.completions.create(
         model=model,
         messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
+            {
+                "role": "developer", 
+                "content": system_prompt
+            },
+            {
+                "role": "user",
+                "content": user_prompt
+            }
         ],
         temperature=temperature
     )
